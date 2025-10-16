@@ -99,7 +99,7 @@
 <h3 id="（3）Hexo安装"><a href="#（3）Hexo安装" class="headerlink" title="（3）Hexo安装"></a>（3）Hexo安装</h3><p>跳转到你想安装hexo的位置，执行<code>npm install hexo -g</code>，<br>安装后输入指令检测是否安装成功<code>hexo --version</code>，显示如下结果则表示安装成功：<br><img src="/pic1/4.png" width="250px" height="250px" style="border:2px solid #ccc; border-radius:8px;"></p>
 <h2 id="2-Github注册-个人repository设置"><a href="#2-Github注册-个人repository设置" class="headerlink" title="2.Github注册+个人repository设置"></a>2.Github注册+个人repository设置</h2><p>注册之后来到主页面github.com，右上角加号选择New repository<br><strong>这里注意，你的repository name一定是&lt;你的用户名.github.io&gt;形式，否则会出现和别人撞网站的情况</strong><br>打开<code>Add a README file</code><br>点击<code>Create repository</code></p>
 <h2 id="3-配置SSH-Key"><a href="#3-配置SSH-Key" class="headerlink" title="3.配置SSH Key"></a>3.配置SSH Key</h2><h3 id="（1）本地配置SSH-Key"><a href="#（1）本地配置SSH-Key" class="headerlink" title="（1）本地配置SSH Key"></a>（1）本地配置SSH Key</h3><p>还是在git-bash里，输入指令<code>ssh-keygen -t rsa -C &quot;你注册github的邮件地址&quot;</code><br>一直点回车，最后出现这样的图示表示配置成功：<br><img src="/pic1/7.png" width="200px" height="200px" style="border:2px solid #ccc; border-radius:8px;"><br>本地C盘打开<code>C/User/你的用户名</code>，看到.ssh文件夹，进入后打开文件<code>id_rsa.pub</code>，并复制全文<br>回到github个人主页，右上角点击自己的头像，点击<code>settings</code>，左边菜单栏选择<code>SSH and GPG keys</code><br>点击按钮<code>New SSH key</code><br>title部分随便写，key这里把复制的内容全部粘贴，点击<code>Add SSH key</code></p>
-<h3 id="（2）测试SSH-key是否配置成功"><a href="#（2）测试SSH-key是否配置成功" class="headerlink" title="（2）测试SSH key是否配置成功"></a>（2）测试SSH key是否配置成功</h3><p>回到git-bash命令行，输入<code>ssh -T <a href="mailto:&#x67;&#x69;&#116;&#64;&#x67;&#x69;&#x74;&#104;&#x75;&#x62;&#x2e;&#99;&#111;&#109;">git@github.com</a></code><br>初次配置时会提示：<br><code><br>This key is not known by any other names.<br>Are you sure you want to continue connecting (yes/no/[fingerprint])?<br></code><br>输入<code>yes</code>即可，显示<br><img src="/pic1/8.png" width="300px" height="300px" style="border:2px solid #ccc; border-radius:8px;"><br>即为配置成功</p>
+<h3 id="（2）测试SSH-key是否配置成功"><a href="#（2）测试SSH-key是否配置成功" class="headerlink" title="（2）测试SSH key是否配置成功"></a>（2）测试SSH key是否配置成功</h3><p>回到git-bash命令行，输入<code>ssh -T <a href="mailto:&#103;&#105;&#x74;&#64;&#x67;&#x69;&#x74;&#104;&#x75;&#98;&#46;&#x63;&#x6f;&#109;">git@github.com</a></code><br>初次配置时会提示：<br><code><br>This key is not known by any other names.<br>Are you sure you want to continue connecting (yes/no/[fingerprint])?<br></code><br>输入<code>yes</code>即可，显示<br><img src="/pic1/8.png" width="300px" height="300px" style="border:2px solid #ccc; border-radius:8px;"><br>即为配置成功</p>
 <h3 id="（3）配置账号和邮箱"><a href="#（3）配置账号和邮箱" class="headerlink" title="（3）配置账号和邮箱"></a>（3）配置账号和邮箱</h3><p>输入指令<br><code>git config --global user.name &quot;你注册GitHub的用户名&quot; </code><br><code>git config --global user.email &quot;你注册GitHub的邮箱&quot; </code></p>
 <h2 id="3-Hexo与GitHub绑定"><a href="#3-Hexo与GitHub绑定" class="headerlink" title="3.Hexo与GitHub绑定"></a>3.Hexo与GitHub绑定</h2><h3 id="（1）Hexo插件安装（hexo-deployer-git）"><a href="#（1）Hexo插件安装（hexo-deployer-git）" class="headerlink" title="（1）Hexo插件安装（hexo-deployer-git）"></a>（1）Hexo插件安装（hexo-deployer-git）</h3><p>本地新建一个存放博客的目录（比如D:&#x2F;Myblog）<br>进入该目录后，使用git-bash安装hexo插件<code>hexo-deployer-git</code>，用于将hexo生成的内容自动部署到GitHub上<br>执行指令<code>npm install hexo-deployer-git --save</code>安装插件<br>再执行<code>hexo init</code>初始化hexo<br>前面正常执行后，执行<code>hexo s</code>，显示：<br><img src="/pic1/9.png" width="400px" height="400px" style="border:2px solid #ccc; border-radius:8px;"><br>此时我们回到浏览器输入地址<code><a target="_blank" rel="noopener" href="https://localhost:4000/">https://localhost:4000</a></code>就可以本地打开静态页面：<br><img src="/pic1/10.png" width="800px" height="800px" style="border:2px solid #ccc; border-radius:8px;"><br>到这一步说明hexo的配置完美结束，接下来我们需要把本地内容输送给GitHub。</p>
 <h3 id="（2）Hexo与GitHub绑定"><a href="#（2）Hexo与GitHub绑定" class="headerlink" title="（2）Hexo与GitHub绑定"></a>（2）Hexo与GitHub绑定</h3><p>来到GitHub的repository页面，按下图操作：<br><img src="/pic1/11.png" width="800px" height="800px" style="border:2px solid #ccc; border-radius:8px;"><br>①绿色按钮&lt;&gt;Code<br>②选择HTTPS<br>③复制</p>
@@ -111,58 +111,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2025/10/15/github%E4%B8%AA%E4%BA%BA%E4%B8%BB%E9%A1%B5%E9%85%8D%E7%BD%AE%E9%83%A8%E7%BD%B2-%E5%8F%91%E5%B8%83%E8%87%AA%E5%B7%B1%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/" data-id="cuid6Z5vKb8QTpB9L3tgfyq70" data-title="github个人主页配置部署+发布自己的第一篇博客" class="article-share-link"><span class="fa fa-share">Share</span></a>
-      
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-
-  
-    <article id="post-hello-world" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
-  <div class="article-meta">
-    <a href="/2025/10/15/hello-world/" class="article-date">
-  <time class="dt-published" datetime="2025-10-15T17:11:48.614Z" itemprop="datePublished">2025-10-15</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="p-name article-title" href="/2025/10/15/hello-world/">Hello World</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="e-content article-entry" itemprop="articleBody">
-      
-        <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://example.com/2025/10/15/hello-world/" data-id="cuidNnr0CN8KwS7FRbbVXytUG" data-title="Hello World" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2025/10/15/github%E4%B8%AA%E4%BA%BA%E4%B8%BB%E9%A1%B5%E9%85%8D%E7%BD%AE%E9%83%A8%E7%BD%B2-%E5%8F%91%E5%B8%83%E8%87%AA%E5%B7%B1%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/" data-id="cuidOh6sD0w2yJDv8DFOOxzDM" data-title="github个人主页配置部署+发布自己的第一篇博客" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -206,10 +155,6 @@
         
           <li>
             <a href="/2025/10/15/github%E4%B8%AA%E4%BA%BA%E4%B8%BB%E9%A1%B5%E9%85%8D%E7%BD%AE%E9%83%A8%E7%BD%B2-%E5%8F%91%E5%B8%83%E8%87%AA%E5%B7%B1%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/">github个人主页配置部署+发布自己的第一篇博客</a>
-          </li>
-        
-          <li>
-            <a href="/2025/10/15/hello-world/">Hello World</a>
           </li>
         
       </ul>

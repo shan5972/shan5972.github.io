@@ -71,6 +71,95 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-RSA非对称加密算法详解（深入剖析设计理念）" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2025/12/30/RSA%E9%9D%9E%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3%EF%BC%88%E6%B7%B1%E5%85%A5%E5%89%96%E6%9E%90%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5%EF%BC%89/" class="article-date">
+  <time class="dt-published" datetime="2025-12-30T11:23:20.752Z" itemprop="datePublished">2025-12-30</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="p-name article-title" href="/2025/12/30/RSA%E9%9D%9E%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3%EF%BC%88%E6%B7%B1%E5%85%A5%E5%89%96%E6%9E%90%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5%EF%BC%89/">RSA非对称加密算法详解（深入剖析设计理念）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>关于RSA的概念背景不多介绍，有需要自行查找，直接上干货。</p>
+<h2 id="设计目标——非对称加密算法"><a href="#设计目标——非对称加密算法" class="headerlink" title="设计目标——非对称加密算法"></a>设计目标——非对称加密算法</h2><p>设计一套非对称加密系统，因此需要公钥+私钥，并且满足：<br><strong>①私钥可以解密公钥</strong><br><strong>②公钥不能推出私钥</strong></p>
+<h2 id="设计灵感——模指数运算-欧拉定理"><a href="#设计灵感——模指数运算-欧拉定理" class="headerlink" title="设计灵感——模指数运算+欧拉定理"></a>设计灵感——模指数运算+欧拉定理</h2><p><strong>①模指数运算</strong>：为了实现需求，设计者想到了数论中的模指数运算（特点：正向计算容易，逆向计算不可能），这就满足了设计目标里的第②条。但是第①条还没有满足，我们必须让私钥能够解开公钥。所以这里需要一个成对的互逆的运算方法，就借用了下面的欧拉定理。</p>
+<p><strong>②欧拉定理</strong>：如果整数M和n互质，那么就有 M<sup>Φ(n)</sup>≡1 mod n  成立（即M<sup>Φ(n)</sup> 与1关于n同余）</p>
+<pre><code>Φ(n)是正整数n的欧拉函数，表示小于n且与n互质的正整数的个数
+a. 如果n是质数，和任意一个比它小的正整数都是互质的，因此当n是质数时，Φ(n)=n-1，
+b. 如果n是合数，我们令n=p*q，则有Φ(n)=Φ(p*q)，根据欧拉函数的”积性“，上式可以分解为Φ(n)=Φ(p)*Φ(q)
+</code></pre>
+<ul>
+<li>怎么理解同余？a≡r mod n 即表示 a mod n &#x3D;r ，r mod n &#x3D;a，所以你看，同余就是个循环，绕了一圈还回到自己。　 </li>
+<li>这里多说一句，即使M和n不互质，通过中国剩余定理等其他数学工具照样也能得到上面的同余公式，因此这个公式通用成立。</li>
+</ul>
+<p>于是这个同余公式表明，M的Φ(n)次方兜兜转转最后会回到1，可是我们要的是加密解密，所以最终应该回到M才对！</p>
+<p>因此，设计者自然考虑了下一步：M<sup>Φ(n)</sup>≡1 mod n</p>
+<p>由于 M<sup>Φ(n)</sup>≡1 mod n，那么就有：<br>M<sup>Φ(n)+1</sup>&#x3D;M<sup>Φ(n)</sup>⋅M≡1⋅M&#x3D;M mod  n<br>这意味着 M<sup>Φ(n)+1</sup>≡M mod  n<br>更一般地，对于任何整数 k，都有：<br>M<sup>k*Φ(n)+1</sup>&#x3D;(M<sup>Φ(n)</sup>)<sup>k</sup>⋅M≡1<sup>k</sup>⋅M&#x3D;M mod  n<br>所以，M<sup>k⋅Φ(n)+1</sup>≡M mod  n</p>
+<p>到了这里，设计者意识到这正是他们所需要的一个循环！</p>
+<p>然而仅仅是循环还是不够，因为循环只是单向，而加密解密系统需要的是双向。</p>
+<p>因此接下来要考虑，如何融入到加密解密的双向过程里去。<br><br></p>
+<p>设计者注意到，</p>
+<p>指数 (k * Φ(n) + 1) 的一个关键特点：它是一个乘积再加1的形式。</p>
+<p>乘积！这意味着它可以被分解！</p>
+<p>于是设计者们开始思考，如果我们不是用同一个指数来完成整个循环，而是把这个指数拆成两个因子 e 和 d，让 e * d &#x3D; k * Φ(n) + 1，会怎么样？</p>
+<p>因此整个循环过程就被拆分成了两个独立的步骤：<br>第一步（加密）：应用第一个因子 e ——C &#x3D; M<sup>e</sup> mod n<br>第二步（解密）：应用第二个因子 d—— M &#x3D; C<sup>d </sup>mod n &#x3D; (M<sup>e</sup> mod n)<sup>d </sup>mod n &#x3D; M<sup>(e*d)</sup> mod n &#x3D; M<sup>(k * Φ(n)  + 1) </sup>mod n ≡ M mod n</p>
+<ul>
+<li>这里同余公式的转换中涉及到模指数运算的一个性质，即，模运算不受指数运算的影响，所以 (M^e mod n)^d mod n &#x3D; M^(e*d) mod n</li>
+</ul>
+<br>
+
+<p>到这里使用两个不同的指数e 和 d将加密和解密变成了两个独立的操作，但它们组合起来的时候就和原来那个对称的、一步到位的操作完全等效。</p>
+<p>接下来要考虑如何将他们变成非对称，也就是公钥私钥的分离？<br><br></p>
+<p>将其中一个指数（比如e）作为公钥和n一起公开，任何人都可以用它进行加密，</p>
+<p>而将另一个指数d严格保密作为私钥，只有拥有者才能解密。</p>
+<p>要想确保从公钥无法推出私钥，也就是无法由（e,n）推出d。</p>
+<p>根据前面所属，有公式e * d ≡ 1 mod Φ(n)，要想解开这个公式就需要知道Φ(n)，</p>
+<p>那么为了难倒天下英雄，就要让Φ(n)的求解非常非常非常困难<br><br></p>
+<p>于是设计者想到了<strong>“大数分解难题”</strong>，<br><br></p>
+<p>前面提到如果n是合数，令n&#x3D;p*q，则有Φ(n)&#x3D;Φ(p)*Φ(q)</p>
+<p>现在我们让p和q都是质数，那么公式就会变成Φ(n)&#x3D;Φ(p)<em>Φ(q)&#x3D;(p-1)</em>(q-1)</p>
+<p>也就是说，如果攻击者想求出Φ(n)就必须知道p和q，而已知一个巨大合数，反求两个相乘的质数是非常困难几乎不可能，</p>
+<p>这也就保证了公钥反推私钥的不可实现。<br><br></p>
+<p>最终，RSA非对称加密解密流程定义如下：</p>
+<p><strong>（1）密钥生成 </strong></p>
+<p>①选择两个巨大的质数p和q</p>
+<p>②计算n&#x3D;p<em>q和Φ(n)&#x3D;(p-1)</em>(q-1)</p>
+<p>③选择整数e使得1&lt;e&lt;Φ(n)，并且e和Φ(n)互质（通常e&#x3D;65537）</p>
+<p><code>为什么e和Φ(n)互质？因为需要有和e对应的私钥d存在，而若想找到对应的d，就必须满足公式e * d ≡ 1 mod Φ(n)，只有e和Φ(n)互质才能实现</code></p>
+<p>④求出d使得e * d ≡ 1 mod Φ(n)</p>
+<p><strong>（2）加密 </strong></p>
+<p>对于明文M，计算密文C&#x3D;M<sup>e</sup> mod n</p>
+<p><strong>（3）解密 </strong></p>
+<p>对于密文C，计算明文M&#x3D;C<sup>d</sup> mod n</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2025/12/30/RSA%E9%9D%9E%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3%EF%BC%88%E6%B7%B1%E5%85%A5%E5%89%96%E6%9E%90%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5%EF%BC%89/" data-id="cuidHdz5lczQwUCblVVR3rvZv" data-title="RSA非对称加密算法详解（深入剖析设计理念）" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+
+  
     <article id="post-github个人主页配置部署-发布自己的第一篇博客" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
     <a href="/2025/10/15/github%E4%B8%AA%E4%BA%BA%E4%B8%BB%E9%A1%B5%E9%85%8D%E7%BD%AE%E9%83%A8%E7%BD%B2-%E5%8F%91%E5%B8%83%E8%87%AA%E5%B7%B1%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/" class="article-date">
@@ -99,9 +188,9 @@
 <h3 id="（3）Hexo安装"><a href="#（3）Hexo安装" class="headerlink" title="（3）Hexo安装"></a>（3）Hexo安装</h3><p>跳转到你想安装hexo的位置，执行<code>npm install hexo -g</code>，<br>安装后输入指令检测是否安装成功<code>hexo --version</code>，显示如下结果则表示安装成功：<br><img src="/pic1/4.png" width="250px" height="250px" style="border:2px solid #ccc; border-radius:8px;"></p>
 <h2 id="2-Github注册-个人repository设置"><a href="#2-Github注册-个人repository设置" class="headerlink" title="2.Github注册+个人repository设置"></a>2.Github注册+个人repository设置</h2><p>注册之后来到主页面github.com，右上角加号选择New repository<br><strong>这里注意，你的repository name一定是&lt;你的用户名.github.io&gt;形式，否则会出现和别人撞网站的情况</strong><br>打开<code>Add a README file</code><br>点击<code>Create repository</code></p>
 <h2 id="3-配置SSH-Key"><a href="#3-配置SSH-Key" class="headerlink" title="3.配置SSH Key"></a>3.配置SSH Key</h2><h3 id="（1）本地配置SSH-Key"><a href="#（1）本地配置SSH-Key" class="headerlink" title="（1）本地配置SSH Key"></a>（1）本地配置SSH Key</h3><p>还是在git-bash里，输入指令<code>ssh-keygen -t rsa -C &quot;你注册github的邮件地址&quot;</code><br>一直点回车，最后出现这样的图示表示配置成功：<br><img src="/pic1/7.png" width="200px" height="200px" style="border:2px solid #ccc; border-radius:8px;"><br>本地C盘打开<code>C/User/你的用户名</code>，看到.ssh文件夹，进入后打开文件<code>id_rsa.pub</code>，并复制全文<br>回到github个人主页，右上角点击自己的头像，点击<code>settings</code>，左边菜单栏选择<code>SSH and GPG keys</code><br>点击按钮<code>New SSH key</code><br>title部分随便写，key这里把复制的内容全部粘贴，点击<code>Add SSH key</code></p>
-<h3 id="（2）测试SSH-key是否配置成功"><a href="#（2）测试SSH-key是否配置成功" class="headerlink" title="（2）测试SSH key是否配置成功"></a>（2）测试SSH key是否配置成功</h3><p>回到git-bash命令行，输入<code>ssh -T <a href="mailto:&#103;&#105;&#x74;&#64;&#x67;&#x69;&#x74;&#104;&#x75;&#98;&#46;&#x63;&#x6f;&#109;">git@github.com</a></code><br>初次配置时会提示：<br><code><br>This key is not known by any other names.<br>Are you sure you want to continue connecting (yes/no/[fingerprint])?<br></code><br>输入<code>yes</code>即可，显示<br><img src="/pic1/8.png" width="300px" height="300px" style="border:2px solid #ccc; border-radius:8px;"><br>即为配置成功</p>
+<h3 id="（2）测试SSH-key是否配置成功"><a href="#（2）测试SSH-key是否配置成功" class="headerlink" title="（2）测试SSH key是否配置成功"></a>（2）测试SSH key是否配置成功</h3><p>回到git-bash命令行，输入<code>ssh -T <a href="mailto:&#x67;&#x69;&#x74;&#64;&#103;&#105;&#116;&#x68;&#117;&#x62;&#46;&#99;&#x6f;&#x6d;">git@github.com</a></code><br>初次配置时会提示：<br><code><br>This key is not known by any other names.<br>Are you sure you want to continue connecting (yes/no/[fingerprint])?<br></code><br>输入<code>yes</code>即可，显示<br><img src="/pic1/8.png" width="300px" height="300px" style="border:2px solid #ccc; border-radius:8px;"><br>即为配置成功</p>
 <h3 id="（3）配置账号和邮箱"><a href="#（3）配置账号和邮箱" class="headerlink" title="（3）配置账号和邮箱"></a>（3）配置账号和邮箱</h3><p>输入指令<br><code>git config --global user.name &quot;你注册GitHub的用户名&quot; </code><br><code>git config --global user.email &quot;你注册GitHub的邮箱&quot; </code></p>
-<h2 id="3-Hexo与GitHub绑定"><a href="#3-Hexo与GitHub绑定" class="headerlink" title="3.Hexo与GitHub绑定"></a>3.Hexo与GitHub绑定</h2><h3 id="（1）Hexo插件安装（hexo-deployer-git）"><a href="#（1）Hexo插件安装（hexo-deployer-git）" class="headerlink" title="（1）Hexo插件安装（hexo-deployer-git）"></a>（1）Hexo插件安装（hexo-deployer-git）</h3><p>本地新建一个存放博客的目录（比如D:&#x2F;Myblog）<br>进入该目录后，使用git-bash安装hexo插件<code>hexo-deployer-git</code>，用于将hexo生成的内容自动部署到GitHub上<br>执行指令<code>npm install hexo-deployer-git --save</code>安装插件<br>再执行<code>hexo init</code>初始化hexo<br>前面正常执行后，执行<code>hexo s</code>，显示：<br><img src="/pic1/9.png" width="400px" height="400px" style="border:2px solid #ccc; border-radius:8px;"><br>此时我们回到浏览器输入地址<code><a target="_blank" rel="noopener" href="https://localhost:4000/">https://localhost:4000</a></code>就可以本地打开静态页面：<br><img src="/pic1/10.png" width="800px" height="800px" style="border:2px solid #ccc; border-radius:8px;"><br>到这一步说明hexo的配置完美结束，接下来我们需要把本地内容输送给GitHub。</p>
+<h2 id="3-Hexo与GitHub绑定"><a href="#3-Hexo与GitHub绑定" class="headerlink" title="3.Hexo与GitHub绑定"></a>3.Hexo与GitHub绑定</h2><h3 id="（1）Hexo插件安装（hexo-deployer-git）"><a href="#（1）Hexo插件安装（hexo-deployer-git）" class="headerlink" title="（1）Hexo插件安装（hexo-deployer-git）"></a>（1）Hexo插件安装（hexo-deployer-git）</h3><p>本地新建一个存放博客的目录（比如D:&#x2F;Myblog）<br>进入该目录后，使用git-bash安装hexo插件<code>hexo-deployer-git</code>，用于将hexo生成的内容自动部署到GitHub上<br>执行指令<code>npm install hexo-deployer-git --save</code>安装插件<br>再执行<code>hexo init</code>初始化hexo<br>前面正常执行后，执行<code>hexo s</code>，显示：<br><img src="/pic1/9.png" width="400px" height="400px" style="border:2px solid #ccc; border-radius:8px;"><br>此时我们回到浏览器输入地址<code><a target="_blank" rel="noopener" href="https://localhost:4000/">https://localhost:4000</a></code>就可以本地打开静态页面：<br><img src="/pic1/10.png" width="800px" height="800px" style="border:2px solid #ccc; border-radius:8px;"><br>到这一步说明hexo的配置完美结束，接下来我们需要把本地内容输送给GitHub。<br><strong>（必须进入该目录后hexo s指令才生效，一定进入该目录再操作！！！）</strong></p>
 <h3 id="（2）Hexo与GitHub绑定"><a href="#（2）Hexo与GitHub绑定" class="headerlink" title="（2）Hexo与GitHub绑定"></a>（2）Hexo与GitHub绑定</h3><p>来到GitHub的repository页面，按下图操作：<br><img src="/pic1/11.png" width="800px" height="800px" style="border:2px solid #ccc; border-radius:8px;"><br>①绿色按钮&lt;&gt;Code<br>②选择HTTPS<br>③复制</p>
 <p>回到本地，还记得hexo-deployer-git插件的安装位置吗（我这里是D:&#x2F;Myblog），里面有一个<code>_config.yml</code>文件，双击打开<br>最下面一行有一个Deployment，在下面输入内容：<br><code>deploy:<br>  type: git<br>  repository: （这里粘贴你复制的HTTPS内容）	<br>  branch: main<br></code></p>
 <p>使用git-bash，来到同样的位置（D:&#x2F;Myblog），执行指令<code>hexo d</code><br>显示如下则表示部署成功：<br><img src="/pic1/12.png" width="300px" height="300px" style="border:2px solid #ccc; border-radius:8px;"><br>此时我们打开浏览器，输入自己的repository地址，显示如下即表示与GitHub绑定成功：<br><img src="/pic1/13.png" width="600px" height="600px" style="border:2px solid #ccc; border-radius:8px;"></p>
@@ -111,7 +200,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2025/10/15/github%E4%B8%AA%E4%BA%BA%E4%B8%BB%E9%A1%B5%E9%85%8D%E7%BD%AE%E9%83%A8%E7%BD%B2-%E5%8F%91%E5%B8%83%E8%87%AA%E5%B7%B1%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/" data-id="cuidOh6sD0w2yJDv8DFOOxzDM" data-title="github个人主页配置部署+发布自己的第一篇博客" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2025/10/15/github%E4%B8%AA%E4%BA%BA%E4%B8%BB%E9%A1%B5%E9%85%8D%E7%BD%AE%E9%83%A8%E7%BD%B2-%E5%8F%91%E5%B8%83%E8%87%AA%E5%B7%B1%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/" data-id="cuid5Soiog5s8-41qLQwr8euJ" data-title="github个人主页配置部署+发布自己的第一篇博客" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -141,7 +230,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/10/">October 2025</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/12/">December 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/10/">October 2025</a></li></ul>
     </div>
   </div>
 
@@ -152,6 +241,10 @@
     <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
+        
+          <li>
+            <a href="/2025/12/30/RSA%E9%9D%9E%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3%EF%BC%88%E6%B7%B1%E5%85%A5%E5%89%96%E6%9E%90%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5%EF%BC%89/">RSA非对称加密算法详解（深入剖析设计理念）</a>
+          </li>
         
           <li>
             <a href="/2025/10/15/github%E4%B8%AA%E4%BA%BA%E4%B8%BB%E9%A1%B5%E9%85%8D%E7%BD%AE%E9%83%A8%E7%BD%B2-%E5%8F%91%E5%B8%83%E8%87%AA%E5%B7%B1%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/">github个人主页配置部署+发布自己的第一篇博客</a>

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  
+  <title>RSA非对称加密算法详解（深入剖析设计理念） | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="关于RSA的概念背景不多介绍，有需要自行查找，直接上干货。 设计目标——非对称加密算法设计一套非对称加密系统，因此需要公钥+私钥，并且满足：①私钥可以解密公钥②公钥不能推出私钥 设计灵感——模指数运算+欧拉定理①模指数运算：为了实现需求，设计者想到了数论中的模指数运算（特点：正向计算容易，逆向计算不可能），这就满足了设计目标里的第②条。但是第①条还没有满足，我们必须让私钥能够解开公钥。所以这里需要">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RSA非对称加密算法详解（深入剖析设计理念）">
+<meta property="og:url" content="http://example.com/2025/12/30/RSA%E9%9D%9E%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3%EF%BC%88%E6%B7%B1%E5%85%A5%E5%89%96%E6%9E%90%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5%EF%BC%89/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="关于RSA的概念背景不多介绍，有需要自行查找，直接上干货。 设计目标——非对称加密算法设计一套非对称加密系统，因此需要公钥+私钥，并且满足：①私钥可以解密公钥②公钥不能推出私钥 设计灵感——模指数运算+欧拉定理①模指数运算：为了实现需求，设计者想到了数论中的模指数运算（特点：正向计算容易，逆向计算不可能），这就满足了设计目标里的第②条。但是第①条还没有满足，我们必须让私钥能够解开公钥。所以这里需要">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2025-12-30T11:23:20.752Z">
+<meta property="article:modified_time" content="2025-12-30T12:57:01.405Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="shortcut icon" href="/favicon.png">
+  
+  
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+    
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fork-awesome@1.2.0/css/fork-awesome.min.css">
+
+<meta name="generator" content="Hexo 8.0.0"></head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"><span class="fa fa-bars"></span></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+        
+          <a class="nav-icon" href="/atom.xml" title="RSS Feed"><span class="fa fa-rss"></span></a>
+        
+        <a class="nav-icon nav-search-btn" title="Search"><span class="fa fa-search"></span></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://example.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+
+      <div class="outer">
+        <section id="main"><article id="post-RSA非对称加密算法详解（深入剖析设计理念）" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+  <div class="article-meta">
+    <a href="/2025/12/30/RSA%E9%9D%9E%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3%EF%BC%88%E6%B7%B1%E5%85%A5%E5%89%96%E6%9E%90%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5%EF%BC%89/" class="article-date">
+  <time class="dt-published" datetime="2025-12-30T11:23:20.752Z" itemprop="datePublished">2025-12-30</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="p-name article-title" itemprop="headline name">
+      RSA非对称加密算法详解（深入剖析设计理念）
+    </h1>
+  
+
+      </header>
+    
+    <div class="e-content article-entry" itemprop="articleBody">
+      
+        <p>关于RSA的概念背景不多介绍，有需要自行查找，直接上干货。</p>
+<h2 id="设计目标——非对称加密算法"><a href="#设计目标——非对称加密算法" class="headerlink" title="设计目标——非对称加密算法"></a>设计目标——非对称加密算法</h2><p>设计一套非对称加密系统，因此需要公钥+私钥，并且满足：<br><strong>①私钥可以解密公钥</strong><br><strong>②公钥不能推出私钥</strong></p>
+<h2 id="设计灵感——模指数运算-欧拉定理"><a href="#设计灵感——模指数运算-欧拉定理" class="headerlink" title="设计灵感——模指数运算+欧拉定理"></a>设计灵感——模指数运算+欧拉定理</h2><p><strong>①模指数运算</strong>：为了实现需求，设计者想到了数论中的模指数运算（特点：正向计算容易，逆向计算不可能），这就满足了设计目标里的第②条。但是第①条还没有满足，我们必须让私钥能够解开公钥。所以这里需要一个成对的互逆的运算方法，就借用了下面的欧拉定理。</p>
+<p><strong>②欧拉定理</strong>：如果整数M和n互质，那么就有 M<sup>Φ(n)</sup>≡1 mod n  成立（即M<sup>Φ(n)</sup> 与1关于n同余）</p>
+<pre><code>Φ(n)是正整数n的欧拉函数，表示小于n且与n互质的正整数的个数
+a. 如果n是质数，和任意一个比它小的正整数都是互质的，因此当n是质数时，Φ(n)=n-1，
+b. 如果n是合数，我们令n=p*q，则有Φ(n)=Φ(p*q)，根据欧拉函数的”积性“，上式可以分解为Φ(n)=Φ(p)*Φ(q)
+</code></pre>
+<ul>
+<li>怎么理解同余？a≡r mod n 即表示 a mod n &#x3D;r ，r mod n &#x3D;a，所以你看，同余就是个循环，绕了一圈还回到自己。　 </li>
+<li>这里多说一句，即使M和n不互质，通过中国剩余定理等其他数学工具照样也能得到上面的同余公式，因此这个公式通用成立。</li>
+</ul>
+<p>于是这个同余公式表明，M的Φ(n)次方兜兜转转最后会回到1，可是我们要的是加密解密，所以最终应该回到M才对！</p>
+<p>因此，设计者自然考虑了下一步：M<sup>Φ(n)</sup>≡1 mod n</p>
+<p>由于 M<sup>Φ(n)</sup>≡1 mod n，那么就有：<br>M<sup>Φ(n)+1</sup>&#x3D;M<sup>Φ(n)</sup>⋅M≡1⋅M&#x3D;M mod  n<br>这意味着 M<sup>Φ(n)+1</sup>≡M mod  n<br>更一般地，对于任何整数 k，都有：<br>M<sup>k*Φ(n)+1</sup>&#x3D;(M<sup>Φ(n)</sup>)<sup>k</sup>⋅M≡1<sup>k</sup>⋅M&#x3D;M mod  n<br>所以，M<sup>k⋅Φ(n)+1</sup>≡M mod  n</p>
+<p>到了这里，设计者意识到这正是他们所需要的一个循环！</p>
+<p>然而仅仅是循环还是不够，因为循环只是单向，而加密解密系统需要的是双向。</p>
+<p>因此接下来要考虑，如何融入到加密解密的双向过程里去。<br><br></p>
+<p>设计者注意到，</p>
+<p>指数 (k * Φ(n) + 1) 的一个关键特点：它是一个乘积再加1的形式。</p>
+<p>乘积！这意味着它可以被分解！</p>
+<p>于是设计者们开始思考，如果我们不是用同一个指数来完成整个循环，而是把这个指数拆成两个因子 e 和 d，让 e * d &#x3D; k * Φ(n) + 1，会怎么样？</p>
+<p>因此整个循环过程就被拆分成了两个独立的步骤：<br>第一步（加密）：应用第一个因子 e ——C &#x3D; M<sup>e</sup> mod n<br>第二步（解密）：应用第二个因子 d—— M &#x3D; C<sup>d </sup>mod n &#x3D; (M<sup>e</sup> mod n)<sup>d </sup>mod n &#x3D; M<sup>(e*d)</sup> mod n &#x3D; M<sup>(k * Φ(n)  + 1) </sup>mod n ≡ M mod n</p>
+<ul>
+<li>这里同余公式的转换中涉及到模指数运算的一个性质，即，模运算不受指数运算的影响，所以 (M^e mod n)^d mod n &#x3D; M^(e*d) mod n</li>
+</ul>
+<br>
+
+<p>到这里使用两个不同的指数e 和 d将加密和解密变成了两个独立的操作，但它们组合起来的时候就和原来那个对称的、一步到位的操作完全等效。</p>
+<p>接下来要考虑如何将他们变成非对称，也就是公钥私钥的分离？<br><br></p>
+<p>将其中一个指数（比如e）作为公钥和n一起公开，任何人都可以用它进行加密，</p>
+<p>而将另一个指数d严格保密作为私钥，只有拥有者才能解密。</p>
+<p>要想确保从公钥无法推出私钥，也就是无法由（e,n）推出d。</p>
+<p>根据前面所属，有公式e * d ≡ 1 mod Φ(n)，要想解开这个公式就需要知道Φ(n)，</p>
+<p>那么为了难倒天下英雄，就要让Φ(n)的求解非常非常非常困难<br><br></p>
+<p>于是设计者想到了<strong>“大数分解难题”</strong>，<br><br></p>
+<p>前面提到如果n是合数，令n&#x3D;p*q，则有Φ(n)&#x3D;Φ(p)*Φ(q)</p>
+<p>现在我们让p和q都是质数，那么公式就会变成Φ(n)&#x3D;Φ(p)<em>Φ(q)&#x3D;(p-1)</em>(q-1)</p>
+<p>也就是说，如果攻击者想求出Φ(n)就必须知道p和q，而已知一个巨大合数，反求两个相乘的质数是非常困难几乎不可能，</p>
+<p>这也就保证了公钥反推私钥的不可实现。<br><br></p>
+<p>最终，RSA非对称加密解密流程定义如下：</p>
+<p><strong>（1）密钥生成 </strong></p>
+<p>①选择两个巨大的质数p和q</p>
+<p>②计算n&#x3D;p<em>q和Φ(n)&#x3D;(p-1)</em>(q-1)</p>
+<p>③选择整数e使得1&lt;e&lt;Φ(n)，并且e和Φ(n)互质（通常e&#x3D;65537）</p>
+<p><code>为什么e和Φ(n)互质？因为需要有和e对应的私钥d存在，而若想找到对应的d，就必须满足公式e * d ≡ 1 mod Φ(n)，只有e和Φ(n)互质才能实现</code></p>
+<p>④求出d使得e * d ≡ 1 mod Φ(n)</p>
+<p><strong>（2）加密 </strong></p>
+<p>对于明文M，计算密文C&#x3D;M<sup>e</sup> mod n</p>
+<p><strong>（3）解密 </strong></p>
+<p>对于密文C，计算明文M&#x3D;C<sup>d</sup> mod n</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2025/12/30/RSA%E9%9D%9E%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3%EF%BC%88%E6%B7%B1%E5%85%A5%E5%89%96%E6%9E%90%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5%EF%BC%89/" data-id="cuidHdz5lczQwUCblVVR3rvZv" data-title="RSA非对称加密算法详解（深入剖析设计理念）" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/2025/10/15/github%E4%B8%AA%E4%BA%BA%E4%B8%BB%E9%A1%B5%E9%85%8D%E7%BD%AE%E9%83%A8%E7%BD%B2-%E5%8F%91%E5%B8%83%E8%87%AA%E5%B7%B1%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">github个人主页配置部署+发布自己的第一篇博客</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/12/">December 2025</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2025/10/">October 2025</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2025/12/30/RSA%E9%9D%9E%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95%E8%AF%A6%E8%A7%A3%EF%BC%88%E6%B7%B1%E5%85%A5%E5%89%96%E6%9E%90%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5%EF%BC%89/">RSA非对称加密算法详解（深入剖析设计理念）</a>
+          </li>
+        
+          <li>
+            <a href="/2025/10/15/github%E4%B8%AA%E4%BA%BA%E4%B8%BB%E9%A1%B5%E9%85%8D%E7%BD%AE%E9%83%A8%E7%BD%B2-%E5%8F%91%E5%B8%83%E8%87%AA%E5%B7%B1%E7%9A%84%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/">github个人主页配置部署+发布自己的第一篇博客</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      
+      &copy; 2025 John Doe<br>
+      Powered by <a href="https://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+
+<script src="/js/jquery-3.6.4.min.js"></script>
+
+
+
+  
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/script.js"></script>
+
+
+
+
+
+  </div>
+</body>
+</html>
